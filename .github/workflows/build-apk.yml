@@ -36,6 +36,8 @@ jobs:
           npm install -D typescript
 
       - name: Build web app
+        env:
+          VITE_ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: npm run build
 
       - name: Add Android platform
@@ -45,6 +47,12 @@ jobs:
         run: |
           mkdir -p android/app/src/main/res/xml
           cp network_security_config.xml android/app/src/main/res/xml/
+
+      - name: Add internet permission to AndroidManifest
+        run: |
+          sed -i 's/<manifest/<manifest/' android/app/src/main/AndroidManifest.xml
+          grep -q 'INTERNET' android/app/src/main/AndroidManifest.xml || \
+          sed -i 's/<application/<uses-permission android:name="android.permission.INTERNET"\/>\n    <application/' android/app/src/main/AndroidManifest.xml
 
       - name: Sync Capacitor
         run: npx cap sync android
