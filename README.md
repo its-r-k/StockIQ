@@ -1,0 +1,263 @@
+# ◈ StockIQ — AI-Powered Stock & Mutual Fund Analyzer
+### Android App Build Guide
+
+---
+
+## 📱 Features
+
+| Feature | Description |
+|--------|-------------|
+| 🤖 AI Deep Analysis | Claude AI analyzes technicals, fundamentals, sentiment & predictions |
+| 📈 Technical Analysis | RSI, MACD, Moving Averages, Support/Resistance, Volume analysis |
+| 📊 Fundamental Analysis | P/E, P/B, D/E, ROE, Revenue Growth, Profit Margins |
+| 🎯 Price Predictions | 1M, 3M, 6M, 1Y targets with probability scores |
+| 💰 Investment Analysis | Returns projection, SIP suggestions, Stop Loss, Target Price |
+| 📰 AI Market News | Claude-analyzed curated news with sector impact |
+| 💼 Portfolio Tracker | Track holdings, P&L, returns in real-time |
+| 🔔 Price Alerts | Set custom buy/sell price alerts |
+| 🌐 Indian Markets | NSE, BSE support — Sensex, Nifty, Stocks, MFs |
+| 🌍 Global Markets | NYSE, NASDAQ, MCX support |
+
+---
+
+## 🛠️ Prerequisites
+
+Install these before building:
+
+1. **Node.js 18+** — https://nodejs.org
+2. **Android Studio** — https://developer.android.com/studio
+   - Install Android SDK (API 34 recommended)
+   - Install Android Build Tools 34.0.0
+3. **Java JDK 17** — https://adoptium.net
+4. **Git** — https://git-scm.com
+
+Set these environment variables:
+```bash
+# Add to ~/.bashrc or ~/.zshrc
+export ANDROID_HOME=$HOME/Android/Sdk
+export PATH=$PATH:$ANDROID_HOME/emulator
+export PATH=$PATH:$ANDROID_HOME/tools
+export PATH=$PATH:$ANDROID_HOME/platform-tools
+```
+
+---
+
+## 🚀 Build Steps
+
+### Step 1 — Install dependencies
+```bash
+cd StockIQ-Android
+npm install
+```
+
+### Step 2 — Build the web app
+```bash
+npm run build
+```
+
+### Step 3 — Initialize Capacitor Android
+```bash
+npx cap add android
+```
+
+### Step 4 — Sync to Android
+```bash
+npx cap sync android
+```
+
+### Step 5 — Build Debug APK
+```bash
+cd android
+./gradlew assembleDebug
+```
+
+Your APK will be at:
+```
+android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+### Step 6 — Install on Android device
+```bash
+# Enable USB Debugging on your phone first
+adb install android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+---
+
+## 📦 Build Release APK (for distribution)
+
+### Generate a signing keystore
+```bash
+keytool -genkey -v \
+  -keystore stockiq-release.keystore \
+  -alias stockiq \
+  -keyalg RSA \
+  -keysize 2048 \
+  -validity 10000
+```
+
+### Configure signing in `android/app/build.gradle`
+```gradle
+android {
+    signingConfigs {
+        release {
+            storeFile file('../../stockiq-release.keystore')
+            storePassword 'YOUR_STORE_PASSWORD'
+            keyAlias 'stockiq'
+            keyPassword 'YOUR_KEY_PASSWORD'
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+```
+
+### Build release APK
+```bash
+cd android
+./gradlew assembleRelease
+```
+
+Release APK will be at:
+```
+android/app/build/outputs/apk/release/app-release.apk
+```
+
+---
+
+## 🔑 API Key Setup
+
+The app uses the Anthropic Claude API for AI analysis. API calls are made to:
+```
+https://api.anthropic.com/v1/messages
+```
+
+**For development**: The Claude.ai artifact version handles auth automatically.
+
+**For production Android app**: You need to add your Anthropic API key.
+
+Option A — Environment variable (recommended):
+```bash
+# Create .env file in project root
+VITE_ANTHROPIC_API_KEY=sk-ant-your-key-here
+```
+
+Then update the fetch call in `src/App.jsx`:
+```javascript
+headers: {
+  "Content-Type": "application/json",
+  "x-api-key": import.meta.env.VITE_ANTHROPIC_API_KEY,
+  "anthropic-version": "2023-06-01"
+}
+```
+
+Option B — Backend proxy (most secure for production):
+Create a simple Express/Node.js proxy that holds your API key server-side.
+
+---
+
+## 📲 Quick Install (PWA — No build required)
+
+The app can also be installed directly as a PWA on Android:
+
+1. Open Chrome on Android
+2. Navigate to the hosted app URL
+3. Tap the three-dot menu → "Add to Home Screen"
+4. The app installs like a native app
+
+---
+
+## 🎨 App Customization
+
+### Change color theme (`src/App.jsx`)
+```javascript
+const C = {
+  bg: "#06060f",        // Background
+  accent: "#00ffcc",    // Accent color
+  primary: "#5b8aff",   // Primary blue
+  positive: "#00e87a",  // Green for gains
+  negative: "#ff4466",  // Red for losses
+  // ... modify as needed
+};
+```
+
+### Add more exchanges
+```javascript
+const EXCHANGES = ["NSE", "BSE", "NYSE", "NASDAQ", "MCX", "YOUR_EXCHANGE"];
+```
+
+### Modify AI analysis prompt
+Search for `callClaudeAnalysis` in `src/App.jsx` and modify the prompt to customize the analysis format.
+
+---
+
+## 📁 Project Structure
+
+```
+StockIQ-Android/
+├── src/
+│   ├── App.jsx          ← Main app component (all features)
+│   └── main.tsx         ← Entry point + Capacitor init
+├── public/
+│   └── manifest.json    ← PWA manifest
+├── android/             ← Auto-generated by Capacitor
+│   └── network_security_config.xml
+├── capacitor.config.ts  ← Capacitor settings
+├── vite.config.ts       ← Build configuration
+├── package.json         ← Dependencies
+└── tsconfig.json        ← TypeScript config
+```
+
+---
+
+## 🔧 Troubleshooting
+
+**Build fails with Java error**
+```bash
+export JAVA_HOME=/path/to/jdk-17
+```
+
+**Gradle sync fails**
+```bash
+cd android
+./gradlew clean
+cd ..
+npx cap sync android
+```
+
+**API calls fail on Android**
+- Make sure `cleartext: true` is in `capacitor.config.ts`
+- Check network security config allows `api.anthropic.com`
+- Verify internet permission in `android/app/src/main/AndroidManifest.xml`:
+  ```xml
+  <uses-permission android:name="android.permission.INTERNET" />
+  ```
+
+**App crashes on launch**
+```bash
+npx cap sync android --inline
+cd android
+./gradlew assembleDebug
+adb logcat | grep StockIQ
+```
+
+---
+
+## 📄 License
+
+MIT License — Free for personal and commercial use.
+
+---
+
+## ⚠️ Disclaimer
+
+StockIQ provides AI-generated analysis for **informational purposes only**. This is **not financial advice**. Always consult a SEBI-registered investment advisor before making investment decisions. Past performance does not guarantee future results.
+
+---
+
+Built with ❤️ using React, Capacitor, and Claude AI
