@@ -31,7 +31,9 @@ jobs:
         uses: android-actions/setup-android@v3.2.2
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          npm install
+          npm install -D typescript
 
       - name: Build web app
         run: npm run build
