@@ -56,7 +56,11 @@ async function callClaudeAnalysis(params) {
   const { symbol, type, amount, horizon, exchange } = params;
   const resp = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+  "Content-Type": "application/json",
+  "x-api-key": "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",
+  "anthropic-version": "2023-06-01"
+},
     body: JSON.stringify({
       model: "claude-sonnet-4-20250514",
       max_tokens: 1000,
@@ -154,7 +158,11 @@ Use REALISTIC data for ${symbol} based on actual recent performance and market c
 async function getMarketNews() {
   const resp = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+  "Content-Type": "application/json",
+  "x-api-key": "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",
+  "anthropic-version": "2023-06-01"
+},
     body: JSON.stringify({
       model: "claude-sonnet-4-20250514",
       max_tokens: 800,
